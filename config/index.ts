@@ -1,6 +1,6 @@
 import type { AppInfo } from '@/types/app'
 export const APP_ID = 'eba7943c-60c9-4cf9-8bf3-cb8c9692a2f7'
-export const API_KEY = '<Web API Key From Dify>'
+export const API_KEY = 'app-tIboWm6vJhTZwicFzfn5DdCg'
 export const API_URL = 'http://ai.signapp.asia/v1'
 export const APP_INFO: AppInfo = {
   title: '加急猫AI',
