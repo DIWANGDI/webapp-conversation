@@ -5,8 +5,8 @@ const translation = {
     appUnkonwError: 'App is unavailable',
   },
   chat: {
-    newChat: 'New chat',
-    newChatDefaultName: 'New conversation',
+    newChat: '新对话',
+    newChatDefaultName: '新对话',
     openingStatementTitle: 'Opening statement',
     powerBy: 'Powered by',
     prompt: 'Prompt',
@@ -15,7 +15,7 @@ const translation = {
     configStatusDes: 'Before start, you can modify conversation settings',
     configDisabled:
       'Previous session settings have been used for this session.',
-    startChat: 'Start Chat',
+    startChat: '开 始',
     privacyPolicyLeft:
       'Please read the ',
     privacyPolicyMiddle:

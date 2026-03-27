@@ -9,7 +9,7 @@ import Toast from '@/app/components/base/toast'
 import Sidebar from '@/app/components/sidebar'
 import ConfigSence from '@/app/components/config-scence'
 import Header from '@/app/components/header'
-import { fetchAppParams, fetchChatList, fetchConversations, generationConversationName, sendChatMessage, updateFeedback } from '@/service'
+import { deleteConversation, fetchAppParams, fetchChatList, fetchConversations, generationConversationName, sendChatMessage, updateFeedback } from '@/service'
 import type { ChatItem, ConversationItem, Feedbacktype, PromptConfig, VisionFile, VisionSettings } from '@/types/app'
 import type { FileUpload } from '@/app/components/base/file-uploader-in-attachment/types'
 import { Resolution, TransferMethod, WorkflowRunningStatus } from '@/types/app'
@@ -51,7 +51,7 @@ const Main: FC<IMainProps> = () => {
   const [fileConfig, setFileConfig] = useState<FileUpload | undefined>()
 
   useEffect(() => {
-    if (APP_INFO?.title) { document.title = `${APP_INFO.title} - Powered by Dify` }
+    if (APP_INFO?.title) { document.title = APP_INFO.title }
   }, [APP_INFO?.title])
 
   // onData change thought (the produce obj). https://github.com/immerjs/immer/issues/576
@@ -166,6 +166,23 @@ const Main: FC<IMainProps> = () => {
     // trigger handleConversationSwitch
     setCurrConversationId(id, APP_ID)
     hideSidebar()
+  }
+
+  const handleDeleteConversation = async (id: string) => {
+    if (!id || id === '-1') { return }
+    if (!globalThis.confirm('确定删除这条会话吗？')) { return }
+    try {
+      await deleteConversation(id)
+      const nextList = conversationList.filter(item => item.id !== id)
+      setConversationList(nextList)
+      if (currConversationId === id) {
+        setCurrConversationId('-1', APP_ID, false)
+        setChatList(generateNewChatListWithOpenStatement())
+      }
+    }
+    catch {
+      notify({ type: 'error', message: '删除会话失败，请重试' })
+    }
   }
 
   /*
@@ -297,6 +314,13 @@ const Main: FC<IMainProps> = () => {
   const { notify } = Toast
   const logError = (message: string) => {
     notify({ type: 'error', message })
+  }
+
+  const buildConversationTitleFromQuery = (query: string) => {
+    const trimmed = (query || '').replace(/\s+/g, ' ').trim()
+    if (!trimmed) { return t('app.chat.newChatDefaultName') as string }
+    const maxLen = 18
+    return trimmed.length > maxLen ? `${trimmed.slice(0, maxLen)}...` : trimmed
   }
 
   const checkCanSend = () => {
@@ -461,10 +485,11 @@ const Main: FC<IMainProps> = () => {
 
         if (getConversationIdChangeBecauseOfNew()) {
           const { data: allConversations }: any = await fetchConversations()
-          const newItem: any = await generationConversationName(allConversations[0].id)
+          const generatedTitle = buildConversationTitleFromQuery(message)
+          const newItem: any = await generationConversationName(allConversations[0].id, generatedTitle)
 
           const newAllConversations = produce(allConversations, (draft: any) => {
-            draft[0].name = newItem.name
+            draft[0].name = newItem.name || generatedTitle
           })
           setConversationList(newAllConversations as any)
         }
@@ -640,6 +665,7 @@ const Main: FC<IMainProps> = () => {
       <Sidebar
         list={conversationList}
         onCurrentIdChange={handleConversationIdChange}
+        onDeleteConversation={handleDeleteConversation}
         currentId={currConversationId}
         copyRight={APP_INFO.copyright || APP_INFO.title}
       />
